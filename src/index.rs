@@ -12,42 +12,48 @@ impl Index {
         return Index { path: Path::new(path.to_string()), entries: vec![] }
     }
 
+    // Finds all files inside and beneath the index path
+    // and adds them to the index entries vector.
     fn populate(&mut self) {
-        let mut directories: fs::Directories;
+        // The entries listed by readdir include the root index path; we want
+        // relative paths, so we get this length so that we can strip it.
         let prefix_length = self.path.as_str().unwrap().len()+1;
 
-        // Start by getting any files in the root path.
-        match fs::readdir(&self.path) {
+        // Start by getting any files in the root path. Since
+        // read_directory_entries is already borrowing a mutable
+        // reference to the index, so we can't also lend out a
+        // reference to its path field, hence the clone.
+        let path = self.path.clone();
+        self.index_directory_files(path, prefix_length);
+
+        // Get an iterator that'll let us walk all of the subdirectories
+        // of the index path, bailing out if there's an error of any kind.
+        let mut subdirectories = match fs::walk_dir(&self.path) {
+            Ok(iterator) => iterator,
+            Err(e) => return,
+        };
+
+        // Index any other files beneath the root directory.
+        for directory in subdirectories {
+            self.index_directory_files(directory, prefix_length);
+        }
+    }
+
+    // Helper method for populate.
+    // Finds files for a particular directory, strips prefix_length leading
+    // characters from their path, and adds them to the index entries vector.
+    fn index_directory_files(&mut self, directory: Path, prefix_length: uint) {
+        match fs::readdir(&directory) {
             Ok(entries) => {
                 // Put all of the file-based Path entries into the index.
                 for file in entries.iter().filter(|entry| entry.is_file()) {
                     // Make the file path relative to the index path by stripping it from its string.
                     let file_path = Path::new(file.as_str().unwrap().slice_from(prefix_length));
+
                     self.entries.push(file_path);
                 }
             },
             Err(e) => (),
-        }
-
-        // Get an iterator that'll let us walk all of the subdirectories of the index path.
-        match fs::walk_dir(&self.path) {
-            Ok(iterator) => directories = iterator,
-            Err(e) => return,
-        }
-
-        for directory in directories {
-            // Read the subdirectory entries.
-            match fs::readdir(&directory) {
-                Ok(entries) => {
-                    // Put all of the file-based Path entries into the index.
-                    for file in entries.iter().filter(|entry| entry.is_file()) {
-                        // Make the file path relative to the index path by stripping it from its string.
-                        let file_path = Path::new(file.as_str().unwrap().slice_from(prefix_length));
-                        self.entries.push(file_path);
-                    }
-                },
-                Err(e) => continue,
-            }
         }
     }
 }
