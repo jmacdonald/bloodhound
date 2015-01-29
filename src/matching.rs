@@ -1,3 +1,40 @@
+pub struct Result {
+    pub path: Path,
+    score: usize,
+}
+
+/// Given a set of paths, `find` returns a set of `Result` objects
+/// ordered by increasing score values (first values are closest matches).
+/// If the result set is larger than `max_results`, the set is reduced to
+/// that size.
+///
+/// # Examples
+///
+/// ```rust
+/// use bloodhound::matching::find;
+///
+/// let paths = vec![Path::new("bloodhound.rs"), Path::new("lib.rs")];
+/// let matches = find("lib", paths, 1);
+/// 
+/// assert_eq!(matches[0].path.as_str().unwrap(), "lib.rs");
+/// ```
+pub fn find(needle: &str, haystack: Vec<Path>, max_results: usize) -> Vec<Result> {
+    let mut results = Vec::new();
+
+    // Calculate a score for each of the haystack entries.
+    for path in haystack.iter() {
+        results.push(Result{ path: path.clone(), score: edit_distance(needle, path.as_str().unwrap()) });
+    }
+
+    // Sort the results in ascending order (higher values are worse).
+    results.sort_by(|a, b| a.score.cmp(&b.score));
+
+    // Make sure we don't exceed the specified result limit.
+    results.truncate(max_results);
+
+    results
+}
+
 /// Determines the minimum number of edits required to transform
 /// the first string into the second, using a matrix-driven
 /// version of the Levenshtein distance algorithm.
@@ -62,8 +99,29 @@ fn edit_distance(first: &str, second: &str) -> usize {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::find;
     use super::edit_distance;
+    use super::Result;
+
+    #[test]
+    fn find_returns_a_correctly_ordered_set_of_results() {
+        let haystack = vec![Path::new("src/hound.rs"),
+            Path::new("lib/hounds.rs"), Path::new("Houndfile")];
+        let expected_results = vec![Path::new("Houndfile"), Path::new("src/hound.rs")];
+        let results = find("Hound", haystack, 2);
+        for i in 0..2 {
+            assert_eq!(results[i].path, expected_results[i]);
+        }
+    }
+
+    #[test]
+    fn find_returns_a_correctly_limited_set_of_results() {
+        let haystack = vec![Path::new("src/hound.rs"),
+            Path::new("lib/hounds.rs"), Path::new("Houndfile")];
+        let expected_results = vec![Path::new("Houndfile"), Path::new("src/hound.rs")];
+        let results = find("Hound", haystack, 2);
+        assert_eq!(results.len(), 2);
+    }
 
     #[test]
     fn edit_distance_is_correct_for_removing_a_character() {
