@@ -42,7 +42,7 @@ impl Index {
     // Helper method for populate.
     // Finds files for a particular directory, strips prefix_length leading
     // characters from their path, and adds them to the index entries vector.
-    fn index_directory_files(&mut self, directory: Path, prefix_length: uint) {
+    fn index_directory_files(&mut self, directory: Path, prefix_length: usize) {
         match fs::readdir(&directory) {
             Ok(entries) => {
                 // Put all of the file-based Path entries into the index.
