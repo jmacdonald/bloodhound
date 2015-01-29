@@ -1,2 +1,2 @@
 mod index;
-mod matching;
+pub mod matching;
