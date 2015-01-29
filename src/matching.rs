@@ -2,9 +2,6 @@
 /// the first string into the second, using a matrix-driven
 /// version of the Levenshtein distance algorithm.
 ///
-/// ```rust
-/// let score = edit_distance("hound", "hounds"); // 1
-/// ```
 fn edit_distance(first: &str, second: &str) -> usize {
     // Initialize a matrix we'll use to track the
     // edit distances as we step through both strings.
