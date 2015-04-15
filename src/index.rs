@@ -1,30 +1,30 @@
-use std::io::fs;
-use std::io::fs::PathExtensions;
-use std::str::StrExt;
+use std::fs;
+use std::fs::PathExt;
+use std::path::{Path, PathBuf};
 
 struct Index {
-    path: Path,
-    entries: Vec<Path>,
+    path: PathBuf,
+    entries: Vec<PathBuf>,
 }
 
 impl Index {
     fn new(path: &str) -> Index {
-        return Index { path: Path::new(path.to_string()), entries: vec![] }
+        return Index { path: PathBuf::from(path.to_string()), entries: vec![] }
     }
 
     // Finds all files inside and beneath the index path
     // and adds them to the index entries vector.
     fn populate(&mut self) {
-        // The entries listed by readdir include the root index path; we want
+        // The entries listed by read_dir include the root index path; we want
         // relative paths, so we get this length so that we can strip it.
-        let prefix_length = self.path.as_str().unwrap().len()+1;
+        let prefix_length = self.path.as_path().to_str().unwrap().len()+1;
 
         // Start by getting any files in the root path. Since
         // read_directory_entries is already borrowing a mutable
         // reference to the index, so we can't also lend out a
         // reference to its path field, hence the clone.
         let path = self.path.clone();
-        self.index_directory_files(path, prefix_length);
+        self.index_directory_files(path.as_path(), prefix_length);
 
         // Get an iterator that'll let us walk all of the subdirectories
         // of the index path, bailing out if there's an error of any kind.
@@ -35,22 +35,29 @@ impl Index {
 
         // Index any other files beneath the root directory.
         for directory in subdirectories {
-            self.index_directory_files(directory, prefix_length);
+            self.index_directory_files(directory.unwrap().path().as_path(), prefix_length);
         }
     }
 
     // Helper method for populate.
     // Finds files for a particular directory, strips prefix_length leading
     // characters from their path, and adds them to the index entries vector.
-    fn index_directory_files(&mut self, directory: Path, prefix_length: usize) {
-        match fs::readdir(&directory) {
+    fn index_directory_files(&mut self, directory: &Path, prefix_length: usize) {
+        match fs::read_dir(directory) {
             Ok(entries) => {
                 // Put all of the file-based Path entries into the index.
-                for file in entries.iter().filter(|entry| entry.is_file()) {
-                    // Make the file path relative to the index path by stripping it from its string.
-                    let file_path = Path::new(file.as_str().unwrap().slice_from(prefix_length));
+                for entry in entries {
+                    match entry {
+                        Ok(e) => {
+                            if e.path().metadata().unwrap().is_file() {
+                                // Make the file path relative to the index path by stripping it from its string.
+                                let file_path = PathBuf::from(e.path().to_str().unwrap()[prefix_length..].to_string());
 
-                    self.entries.push(file_path);
+                                self.entries.push(file_path);
+                            }
+                        },
+                        Err(_) => ()
+                    }
                 }
             },
             Err(e) => (),

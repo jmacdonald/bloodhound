@@ -1,5 +1,7 @@
+use std::path::{Path, PathBuf};
+
 pub struct Result {
-    pub path: Path,
+    pub path: PathBuf,
     score: usize,
 }
 
@@ -15,15 +17,15 @@ pub struct Result {
 ///
 /// let paths = vec![Path::new("bloodhound.rs"), Path::new("lib.rs")];
 /// let matches = find("lib", paths, 1);
-/// 
+///
 /// assert_eq!(matches[0].path.as_str().unwrap(), "lib.rs");
 /// ```
-pub fn find(needle: &str, haystack: Vec<Path>, max_results: usize) -> Vec<Result> {
+pub fn find(needle: &str, haystack: Vec<PathBuf>, max_results: usize) -> Vec<Result> {
     let mut results = Vec::new();
 
     // Calculate a score for each of the haystack entries.
     for path in haystack.iter() {
-        results.push(Result{ path: path.clone(), score: edit_distance(needle, path.as_str().unwrap()) });
+        results.push(Result{ path: path.clone(), score: edit_distance(needle, path.as_path().to_str().unwrap()) });
     }
 
     // Sort the results in ascending order (higher values are worse).
