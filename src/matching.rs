@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 pub struct Result {
     pub path: PathBuf,
@@ -13,12 +13,13 @@ pub struct Result {
 /// # Examples
 ///
 /// ```rust
+/// use std::path::PathBuf;
 /// use bloodhound::matching::find;
 ///
-/// let paths = vec![Path::new("bloodhound.rs"), Path::new("lib.rs")];
+/// let paths = vec![PathBuf::from("bloodhound.rs"), PathBuf::from("lib.rs")];
 /// let matches = find("lib", paths, 1);
 ///
-/// assert_eq!(matches[0].path.as_str().unwrap(), "lib.rs");
+/// assert_eq!(matches[0].path.to_str().unwrap(), "lib.rs");
 /// ```
 pub fn find(needle: &str, haystack: Vec<PathBuf>, max_results: usize) -> Vec<Result> {
     let mut results = Vec::new();
@@ -103,13 +104,13 @@ fn edit_distance(first: &str, second: &str) -> usize {
 mod tests {
     use super::find;
     use super::edit_distance;
-    use super::Result;
+    use std::path::PathBuf;
 
     #[test]
     fn find_returns_a_correctly_ordered_set_of_results() {
-        let haystack = vec![Path::new("src/hound.rs"),
-            Path::new("lib/hounds.rs"), Path::new("Houndfile")];
-        let expected_results = vec![Path::new("Houndfile"), Path::new("src/hound.rs")];
+        let haystack = vec![PathBuf::from("src/hound.rs"),
+            PathBuf::from("lib/hounds.rs"), PathBuf::from("Houndfile")];
+        let expected_results = vec![PathBuf::from("Houndfile"), PathBuf::from("src/hound.rs")];
         let results = find("Hound", haystack, 2);
         for i in 0..2 {
             assert_eq!(results[i].path, expected_results[i]);
@@ -118,9 +119,8 @@ mod tests {
 
     #[test]
     fn find_returns_a_correctly_limited_set_of_results() {
-        let haystack = vec![Path::new("src/hound.rs"),
-            Path::new("lib/hounds.rs"), Path::new("Houndfile")];
-        let expected_results = vec![Path::new("Houndfile"), Path::new("src/hound.rs")];
+        let haystack = vec![PathBuf::from("src/hound.rs"),
+            PathBuf::from("lib/hounds.rs"), PathBuf::from("Houndfile")];
         let results = find("Hound", haystack, 2);
         assert_eq!(results.len(), 2);
     }

@@ -28,9 +28,9 @@ impl Index {
 
         // Get an iterator that'll let us walk all of the subdirectories
         // of the index path, bailing out if there's an error of any kind.
-        let mut subdirectories = match fs::walk_dir(&self.path) {
+        let subdirectories = match fs::walk_dir(&self.path) {
             Ok(iterator) => iterator,
-            Err(e) => return,
+            Err(_) => return,
         };
 
         // Index any other files beneath the root directory.
@@ -60,7 +60,7 @@ impl Index {
                     }
                 }
             },
-            Err(e) => (),
+            Err(_) => (),
         }
     }
 }
@@ -71,7 +71,7 @@ fn new_creates_index_with_passed_path() {
     let index = Index::new(path);
 
     // Get the index path as a string.
-    let index_path = match index.path.as_str() {
+    let index_path = match index.path.to_str() {
         Some(value) => value,
         None => ""
     };
@@ -83,7 +83,7 @@ fn new_creates_index_with_passed_path() {
 fn new_creates_index_with_empty_array() {
     let path = "my path";
     let index = Index::new(path);
-    let empty_array: Vec<Path> = vec![];
+    let empty_array: Vec<PathBuf> = vec![];
 
     assert!(index.entries == empty_array);
 }
@@ -92,7 +92,7 @@ fn new_creates_index_with_empty_array() {
 fn populate_adds_all_files_to_entries() {
     let path = "tests/sample";
     let index = &mut Index::new(path);
-    let expected_array = vec![Path::new("root_file"), Path::new("directory/nested_file")];
+    let expected_array = vec![PathBuf::from("root_file"), PathBuf::from("directory/nested_file")];
     index.populate();
 
     assert!(index.entries == expected_array);
