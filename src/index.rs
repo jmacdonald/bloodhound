@@ -1,6 +1,7 @@
 use std::fs;
-use std::fs::PathExt;
+use std::fs::{PathExt, DirEntry};
 use std::path::{Path, PathBuf};
+use std::io::Error;
 
 struct Index {
     path: PathBuf,
@@ -53,30 +54,33 @@ impl Index {
             Ok(entries) => {
                 // Put all of the file-based Path entries into the index.
                 for entry in entries {
-                    match entry {
-                        Ok(e) => {
-                            match e.path().metadata() {
-                                Ok(metadata) => if metadata.is_file() {
-                                    match e.path().to_str() {
-                                        Some(entry_path) => {
-                                            // Make the file path relative to the index
-                                            // path by stripping it from its string.
-                                            let relative_path = entry_path[prefix_length..].to_string();
-
-                                            self.entries.push(PathBuf::from(relative_path));
-                                        },
-                                        None => (),
-                                    }
-                                },
-                                Err(_) => (),
-                            }
-                        },
-                        Err(_) => (),
+                    match relative_entry_path(entry, prefix_length) {
+                        Some(entry_path) => self.entries.push(PathBuf::from(entry_path)),
+                        _ => (),
                     }
                 }
             },
             Err(_) => (),
         }
+    }
+}
+
+/// Transforms a DirEntry object into an optional relative path string,
+/// returning None if any errors occur or if the entry is not a file.
+fn relative_entry_path(entry: Result<DirEntry, Error>, prefix_length: usize) -> Option<String> {
+    match entry {
+        Ok(e) => match e.path().metadata() {
+            Ok(metadata) => if metadata.is_file() {
+                match e.path().to_str() {
+                    Some(path) => Some(path[prefix_length..].to_string()),
+                    _ => None,
+                }
+            } else {
+                None
+            },
+            _ => None,
+        },
+        _ => None,
     }
 }
 
