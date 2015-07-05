@@ -26,7 +26,15 @@ pub fn find(needle: &str, haystack: Vec<PathBuf>, max_results: usize) -> Vec<Res
 
     // Calculate a score for each of the haystack entries.
     for path in haystack.iter() {
-        results.push(Result{ path: path.clone(), score: edit_distance(needle, path.as_path().to_str().unwrap()) });
+        match path.to_str() {
+            Some(path_string) => {
+                results.push(Result{
+                    path: path.clone(),
+                    score: edit_distance(needle, path_string)
+                });
+            },
+            None => (),
+        }
     }
 
     // Sort the results in ascending order (higher values are worse).

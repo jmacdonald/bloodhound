@@ -17,26 +17,32 @@ impl Index {
     fn populate(&mut self) {
         // The entries listed by read_dir include the root index path; we want
         // relative paths, so we get this length so that we can strip it.
-        let prefix_length = self.path.as_path().to_str().unwrap().len()+1;
+        let prefix_length = match self.path.to_str() {
+            Some(path) => path.len()+1,
+            None => return,
+        };
 
         // Start by getting any files in the root path. Since
         // read_directory_entries is already borrowing a mutable
         // reference to the index, so we can't also lend out a
         // reference to its path field, hence the clone.
         let path = self.path.clone();
-        self.index_directory_files(path.as_path(), prefix_length);
+        self.index_directory_files(&path, prefix_length);
 
         // Get an iterator that'll let us walk all of the subdirectories
         // of the index path, bailing out if there's an error of any kind.
-        let subdirectories = match fs::walk_dir(&self.path) {
-            Ok(iterator) => iterator,
+        match fs::walk_dir(&self.path) {
+            Ok(subdirectories) => {
+                // Index any other files beneath the root directory.
+                for directory in subdirectories {
+                    match directory {
+                        Ok(dir) => self.index_directory_files(&dir.path(), prefix_length),
+                        Err(_) => (),
+                    }
+                }
+            },
             Err(_) => return,
         };
-
-        // Index any other files beneath the root directory.
-        for directory in subdirectories {
-            self.index_directory_files(directory.unwrap().path().as_path(), prefix_length);
-        }
     }
 
     // Helper method for populate.
@@ -49,14 +55,23 @@ impl Index {
                 for entry in entries {
                     match entry {
                         Ok(e) => {
-                            if e.path().metadata().unwrap().is_file() {
-                                // Make the file path relative to the index path by stripping it from its string.
-                                let file_path = PathBuf::from(e.path().to_str().unwrap()[prefix_length..].to_string());
+                            match e.path().metadata() {
+                                Ok(metadata) => if metadata.is_file() {
+                                    match e.path().to_str() {
+                                        Some(entry_path) => {
+                                            // Make the file path relative to the index
+                                            // path by stripping it from its string.
+                                            let relative_path = entry_path[prefix_length..].to_string();
 
-                                self.entries.push(file_path);
+                                            self.entries.push(PathBuf::from(relative_path));
+                                        },
+                                        None => (),
+                                    }
+                                },
+                                Err(_) => (),
                             }
                         },
-                        Err(_) => ()
+                        Err(_) => (),
                     }
                 }
             },
