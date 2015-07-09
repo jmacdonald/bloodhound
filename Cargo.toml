@@ -3,3 +3,8 @@
 name = "bloodhound"
 version = "0.0.1"
 authors = ["Jordan MacDonald <jordan@wastedintelligence.com>"]
+description = "Fuzzy file finder."
+homepage = "https://github.com/jmacdonald/bloodhound"
+repository = "https://github.com/jmacdonald/bloodhound"
+license-file = "LICENSE"
+keywords = ["fuzzy", "file", "find", "levenshtein"]
