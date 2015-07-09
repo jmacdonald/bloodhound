@@ -3,7 +3,7 @@ use std::fs::{PathExt, DirEntry};
 use std::path::{Path, PathBuf};
 use std::io::Error;
 
-struct Index {
+pub struct Index {
     path: PathBuf,
     entries: Vec<PathBuf>,
 }
