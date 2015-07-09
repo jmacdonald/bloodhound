@@ -9,13 +9,9 @@ pub struct Index {
 }
 
 impl Index {
-    fn new(path: &str) -> Index {
-        return Index { path: PathBuf::from(path.to_string()), entries: vec![] }
-    }
-
-    // Finds all files inside and beneath the index path
-    // and adds them to the index entries vector.
-    fn populate(&mut self) {
+    /// Finds all files inside and beneath the index path
+    /// and adds them to the index entries vector.
+    pub fn populate(&mut self) {
         // The entries listed by read_dir include the root index path; we want
         // relative paths, so we get this length so that we can strip it.
         let prefix_length = match self.path.to_str() {
@@ -46,9 +42,9 @@ impl Index {
         };
     }
 
-    // Helper method for populate.
-    // Finds files for a particular directory, strips prefix_length leading
-    // characters from their path, and adds them to the index entries vector.
+    /// Helper method for populate.
+    /// Finds files for a particular directory, strips prefix_length leading
+    /// characters from their path, and adds them to the index entries vector.
     fn index_directory_files(&mut self, directory: &Path, prefix_length: usize) {
         match fs::read_dir(directory) {
             Ok(entries) => {
@@ -63,6 +59,10 @@ impl Index {
             Err(_) => (),
         }
     }
+}
+
+pub fn new(path: PathBuf) -> Index {
+    return Index { path: path, entries: vec![] }
 }
 
 /// Transforms a DirEntry object into an optional relative path string,
