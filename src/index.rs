@@ -62,7 +62,10 @@ impl Index {
 }
 
 pub fn new(path: PathBuf) -> Index {
-    return Index { path: path, entries: vec![] }
+    Index {
+        path: path,
+        entries: Vec::new(),
+    }
 }
 
 /// Transforms a DirEntry object into an optional relative path string,
@@ -84,35 +87,18 @@ fn relative_entry_path(entry: Result<DirEntry, Error>, prefix_length: usize) -> 
     }
 }
 
-#[test]
-fn new_creates_index_with_passed_path() {
-    let path = "my path";
-    let index = Index::new(path);
+#[cfg(test)]
+mod tests {
+    use super::new;
+    use std::path::PathBuf;
 
-    // Get the index path as a string.
-    let index_path = match index.path.to_str() {
-        Some(value) => value,
-        None => ""
-    };
+    #[test]
+    fn populate_adds_all_files_to_entries() {
+        let path = PathBuf::from("tests/sample");
+        let mut index = new(path);
+        let expected_array = vec![PathBuf::from("root_file"), PathBuf::from("directory/nested_file")];
+        index.populate();
 
-    assert_eq!(index_path, path);
-}
-
-#[test]
-fn new_creates_index_with_empty_array() {
-    let path = "my path";
-    let index = Index::new(path);
-    let empty_array: Vec<PathBuf> = vec![];
-
-    assert!(index.entries == empty_array);
-}
-
-#[test]
-fn populate_adds_all_files_to_entries() {
-    let path = "tests/sample";
-    let index = &mut Index::new(path);
-    let expected_array = vec![PathBuf::from("root_file"), PathBuf::from("directory/nested_file")];
-    index.populate();
-
-    assert!(index.entries == expected_array);
+        assert!(index.entries == expected_array);
+    }
 }
