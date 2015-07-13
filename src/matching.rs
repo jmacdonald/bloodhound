@@ -21,7 +21,7 @@ pub struct Result {
 ///
 /// assert_eq!(matches[0].path.to_str().unwrap(), "lib.rs");
 /// ```
-pub fn find(needle: &str, haystack: Vec<PathBuf>, max_results: usize) -> Vec<Result> {
+pub fn find(needle: &str, haystack: &Vec<PathBuf>, max_results: usize) -> Vec<Result> {
     let mut results = Vec::new();
 
     // Calculate a score for each of the haystack entries.
@@ -119,7 +119,7 @@ mod tests {
         let haystack = vec![PathBuf::from("src/hound.rs"),
             PathBuf::from("lib/hounds.rs"), PathBuf::from("Houndfile")];
         let expected_results = vec![PathBuf::from("Houndfile"), PathBuf::from("src/hound.rs")];
-        let results = find("Hound", haystack, 2);
+        let results = find("Hound", &haystack, 2);
         for i in 0..2 {
             assert_eq!(results[i].path, expected_results[i]);
         }
@@ -129,7 +129,7 @@ mod tests {
     fn find_returns_a_correctly_limited_set_of_results() {
         let haystack = vec![PathBuf::from("src/hound.rs"),
             PathBuf::from("lib/hounds.rs"), PathBuf::from("Houndfile")];
-        let results = find("Hound", haystack, 2);
+        let results = find("Hound", &haystack, 2);
         assert_eq!(results.len(), 2);
     }
 
