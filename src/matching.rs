@@ -66,13 +66,29 @@ fn similarity(query: &str, subject: &str) -> f32 {
 
     let mut overall_score = 0.0;
     let subject_length = subject.chars().count();
+
+    // We'll use these to add weight to consecutive character matches.
+    let mut previous_match_indices = Vec::new();
+    let mut current_match_indices  = Vec::new();
+
     for query_char in query.chars() {
         let mut character_score = 0.0;
-        for subject_char in subject.chars() {
+        for (index, subject_char) in subject.chars().enumerate() {
             // For every occurrence of a query character in the
             // subject increase the individual character's score.
             if query_char == subject_char {
                 character_score += 1.0;
+
+                // Track the index at which we found a match,
+                // so that we can detect subsequent matches.
+                current_match_indices.push(index);
+
+                // If the last query character matched the previous subject
+                // character, there are at least two consecutive characters
+                // that match; bump the character score to account for that.
+                if index > 0 && previous_match_indices.contains(&(index-1)) {
+                    character_score += 1.0;
+                }
             }
         }
 
@@ -80,6 +96,11 @@ fn similarity(query: &str, subject: &str) -> f32 {
         // of "1" and add it to the overall score.
         character_score /= subject_length as f32;
         overall_score += character_score;
+
+        // The current matches become the
+        // previous ones for the next iteration.
+        previous_match_indices = current_match_indices;
+        current_match_indices = Vec::new();
     }
 
     // Return an overall score, limited to a maximum value of "1".
@@ -128,5 +149,14 @@ mod tests {
         // Don't use a perfect match, since those product a perfect score.
         let same_length_score = similarity("houn", "hound");
         assert!(same_length_score > differing_length_score);
+    }
+
+    #[test]
+    fn similarity_score_increases_for_consecutive_matches() {
+        // Don't use a perfect match, since those product a perfect score.
+        let properly_ordered_score = similarity("houn", "hound");
+
+        let improperly_ordered_score = similarity("nuoh", "hound");
+        assert!(properly_ordered_score > improperly_ordered_score);
     }
 }
