@@ -97,6 +97,12 @@ fn similarity(query: &str, subject: &str) -> f32 {
         character_score /= subject_length as f32;
         overall_score += character_score;
 
+        // If this query character doesn't exist in the subject,
+        // penalize the overall score.
+        if current_match_indices.is_empty() {
+            overall_score -= 10.0;
+        }
+
         // The current matches become the
         // previous ones for the next iteration.
         previous_match_indices = current_match_indices;
@@ -104,7 +110,7 @@ fn similarity(query: &str, subject: &str) -> f32 {
     }
 
     // Return an overall score, limited to a maximum value of "1".
-    overall_score / subject.chars().count() as f32
+    (overall_score / subject.chars().count() as f32).max(0.0)
 }
 
 #[cfg(test)]
@@ -158,5 +164,14 @@ mod tests {
 
         let improperly_ordered_score = similarity("nuoh", "hound");
         assert!(properly_ordered_score > improperly_ordered_score);
+    }
+
+    #[test]
+    fn similarity_score_decreases_for_non_matching_characters() {
+        // Don't use a perfect match, since those product a perfect score.
+        let non_matching_score = similarity("houns", "hound");
+
+        let subset_score = similarity("houn", "hound");
+        assert!(subset_score > non_matching_score);
     }
 }
