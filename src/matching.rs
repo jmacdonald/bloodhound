@@ -18,7 +18,7 @@ pub struct Result {
 /// use bloodhound::matching::find;
 ///
 /// let paths = vec![PathBuf::from("bloodhound.rs"), PathBuf::from("lib.rs")];
-/// let matches = find("lib", paths, 1);
+/// let matches = find("lib", &paths, 1);
 ///
 /// assert_eq!(matches[0].path.to_str().unwrap(), "lib.rs");
 /// ```
