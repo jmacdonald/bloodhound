@@ -69,21 +69,27 @@ fn similarity(query: &str, subject: &str) -> f32 {
     for query_char in query.chars() {
         let mut character_score = 0.0;
         for subject_char in subject.chars() {
+            // For every occurrence of a query character in the
+            // subject increase the individual character's score.
             if query_char == subject_char {
                 character_score += 1.0;
             }
         }
 
+        // Limit the character score to a maximum value
+        // of "1" and add it to the overall score.
         character_score /= subject_length as f32;
         overall_score += character_score;
     }
 
-    overall_score / query.chars().count() as f32
+    // Return an overall score, limited to a maximum value of "1".
+    overall_score / subject.chars().count() as f32
 }
 
 #[cfg(test)]
 mod tests {
     use super::find;
+    use super::similarity;
     use std::path::PathBuf;
 
     #[test]
@@ -103,5 +109,24 @@ mod tests {
             PathBuf::from("lib/hounds.rs"), PathBuf::from("Houndfile")];
         let results = find("Hound", &haystack, 2);
         assert_eq!(results.len(), 2);
+    }
+
+    #[test]
+    fn similarity_correctly_scores_perfect_matches() {
+        assert_eq!(similarity("src/hound.rs", "src/hound.rs"), 1.0);
+    }
+
+    #[test]
+    fn similarity_correctly_scores_completely_different_terms() {
+        assert_eq!(similarity("lib", "src"), 0.0);
+    }
+
+    #[test]
+    fn similarity_scores_based_on_term_length() {
+        let differing_length_score = similarity("houn", "houndhound");
+
+        // Don't use a perfect match, since those product a perfect score.
+        let same_length_score = similarity("houn", "hound");
+        assert!(same_length_score > differing_length_score);
     }
 }
