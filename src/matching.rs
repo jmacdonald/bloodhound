@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+#[derive(Debug, PartialEq)]
 pub struct Result {
     pub path: PathBuf,
     score: usize,

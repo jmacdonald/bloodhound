@@ -1,3 +1,5 @@
+use matching;
+
 use std::fs;
 use std::fs::{PathExt, DirEntry};
 use std::path::{Path, PathBuf};
@@ -40,6 +42,11 @@ impl Index {
             },
             Err(_) => return,
         };
+    }
+
+
+    pub fn find(&self, term: &str, limit: usize) -> Vec<matching::Result> {
+        matching::find(term, &self.entries, limit)
     }
 
     /// Helper method for populate.
@@ -100,5 +107,24 @@ mod tests {
         index.populate();
 
         assert!(index.entries == expected_array);
+    }
+
+    #[test]
+    fn find_defers_to_matching_module() {
+        let path = PathBuf::from("tests/sample");
+        let mut index = new(path);
+        index.populate();
+        let term = "root";
+        let limit = 5;
+        let expected_results = ::matching::find(
+            term,
+            &vec![
+                PathBuf::from("root_file"),
+                PathBuf::from("directory/nested_file")
+            ],
+            limit
+        );
+
+        assert_eq!(index.find(term, limit), expected_results);
     }
 }
