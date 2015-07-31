@@ -110,7 +110,7 @@ fn similarity(query: &str, subject: &str) -> f32 {
     }
 
     // Return an overall score, limited to a maximum value of "1".
-    (overall_score / subject.chars().count() as f32).max(0.0)
+    (overall_score / subject_length as f32).max(0.0)
 }
 
 #[cfg(test)]
