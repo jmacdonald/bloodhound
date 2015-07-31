@@ -1,5 +1,7 @@
+use std::thread;
 use std::path::PathBuf;
 use std::cmp::Ordering;
+use std::sync::mpsc;
 
 #[derive(Debug, PartialEq)]
 pub struct Result {
@@ -25,17 +27,42 @@ pub struct Result {
 /// ```
 pub fn find(needle: &str, haystack: &Vec<PathBuf>, max_results: usize) -> Vec<Result> {
     let mut results = Vec::new();
+    let (tx, rx) = mpsc::channel();
 
     // Calculate a score for each of the haystack entries.
     for path in haystack.iter() {
         match path.to_str() {
             Some(path_string) => {
-                results.push(Result{
-                    path: path.clone(),
-                    score: similarity(needle, path_string)
+                // Each thread needs its own transmit channel.
+                let thread_tx = tx.clone();
+                let thread_path = path.clone();
+                let thread_needle = needle.to_string();
+                let thread_path_string = path_string.to_string();
+
+                thread::spawn(move || {
+                    // Create a result and send it back to 
+                    // the parent thread over the channel.
+                    let result = Result{
+                        path: thread_path,
+                        score: similarity(&thread_needle, &thread_path_string)
+                    };
+
+                    thread_tx.send(result);
                 });
             },
             None => (),
+        }
+    }
+
+    // Collect the results built in other threads.
+    let mut received_result_count = 0;
+    while received_result_count < haystack.len() {
+        match rx.recv() {
+            Ok(result) => {
+                results.push(result);
+                received_result_count += 1;
+            },
+            Err(_) => break,
         }
     }
 
