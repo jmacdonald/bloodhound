@@ -58,7 +58,7 @@ pub fn find(needle: &str, haystack: &Vec<PathBuf>, max_results: usize) -> Vec<Re
 
 /// Compares the query string to the subject,
 /// and returns a score between 0 and 1.
-fn similarity(query: &str, subject: &str) -> f32 {
+pub fn similarity(query: &str, subject: &str) -> f32 {
     // Exact matches produce a perfect score.
     if query == subject {
         return 1.0;
