@@ -5,16 +5,21 @@ extern crate bloodhound;
 
 use test::Bencher;
 use std::path::PathBuf;
-use bloodhound::matching::{find, similarity};
+use bloodhound::entry;
+use bloodhound::matching::find;
 
 #[bench]
 fn bench_find(b: &mut Bencher) {
-    let haystack = vec![PathBuf::from("src/hound.rs"),
-        PathBuf::from("lib/hounds.rs"), PathBuf::from("Houndfile")];
+    let haystack = vec![
+        entry::new("src/hound.rs".to_string()),
+        entry::new("lib/hounds.rs".to_string()),
+        entry::new("Houndfile".to_string())
+    ];
     b.iter(|| find("match", &haystack, 5));
 }
 
 #[bench]
 fn bench_similarity(b: &mut Bencher) {
-    b.iter(|| similarity("matching.rs", "bloodhound/src/matching.rs"));
+    let entry = entry::new("bloodhound/src/matching.rs".to_string());
+    b.iter(|| entry.similarity("matching.rs"));
 }

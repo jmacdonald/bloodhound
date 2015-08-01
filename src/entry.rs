@@ -1,7 +1,7 @@
-use matching;
 use std::path::PathBuf;
 use std::collections::hash_map::HashMap;
 
+#[derive(PartialEq)]
 pub struct Entry {
     pub path: PathBuf,
     pub index: HashMap<char, Vec<usize>>,
@@ -96,41 +96,47 @@ mod tests {
 
     #[test]
     fn similarity_correctly_scores_perfect_matches() {
-        let entry = new("thing".to_string());
-        assert_eq!(similarity("src/hound.rs", "src/hound.rs"), 1.0);
+        let entry = new("src/hound.rs".to_string());
+        assert_eq!(entry.similarity("src/hound.rs"), 1.0);
     }
 
     #[test]
     fn similarity_correctly_scores_completely_different_terms() {
-        let entry = new("thing".to_string());
-        assert_eq!(similarity("lib", "src"), 0.0);
+        let entry = new("src".to_string());
+        assert_eq!(entry.similarity("lib"), 0.0);
     }
 
     #[test]
     fn similarity_scores_based_on_term_length() {
-        let entry = new("thing".to_string());
-        let differing_length_score = similarity("houn", "houndhound");
+        let long_entry = new("houndhound".to_string());
+        let differing_length_score = long_entry.similarity("houn");
 
         // Don't use a perfect match, since those product a perfect score.
-        let same_length_score = similarity("houn", "hound");
+        let short_entry = new("hound".to_string());
+        let same_length_score = short_entry.similarity("houn");
+
         assert!(same_length_score > differing_length_score);
     }
 
     #[test]
     fn similarity_score_increases_for_consecutive_matches() {
-        // Don't use a perfect match, since those product a perfect score.
-        let properly_ordered_score = similarity("houn", "hound");
+        let entry = new("hound".to_string());
 
-        let improperly_ordered_score = similarity("nuoh", "hound");
+        // Don't use a perfect match, since those product a perfect score.
+        let properly_ordered_score = entry.similarity("houn");
+
+        let improperly_ordered_score = entry.similarity("nuoh");
         assert!(properly_ordered_score > improperly_ordered_score);
     }
 
     #[test]
     fn similarity_score_decreases_for_non_matching_characters() {
-        // Don't use a perfect match, since those product a perfect score.
-        let non_matching_score = similarity("houns", "hound");
+        let entry = new("hound".to_string());
 
-        let subset_score = similarity("houn", "hound");
+        // Don't use a perfect match, since those product a perfect score.
+        let non_matching_score = entry.similarity("houns");
+
+        let subset_score = entry.similarity("houn");
         assert!(subset_score > non_matching_score);
     }
 }

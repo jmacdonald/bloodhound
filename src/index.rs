@@ -98,6 +98,7 @@ fn relative_entry_path(entry: Result<DirEntry, Error>, prefix_length: usize) -> 
 
 #[cfg(test)]
 mod tests {
+    use entry;
     use super::new;
     use std::path::PathBuf;
 
@@ -105,10 +106,13 @@ mod tests {
     fn populate_adds_all_files_to_entries() {
         let path = PathBuf::from("tests/sample");
         let mut index = new(path);
-        let expected_array = vec![PathBuf::from("root_file"), PathBuf::from("directory/nested_file")];
+        let expected_entries = vec![
+            entry::new("root_file".to_string()),
+            entry::new("directory/nested_file".to_string())
+        ];
         index.populate();
 
-        assert!(index.entries == expected_array);
+        assert!(index.entries == expected_entries);
     }
 
     #[test]
@@ -121,8 +125,8 @@ mod tests {
         let expected_results = ::matching::find(
             term,
             &vec![
-                PathBuf::from("root_file"),
-                PathBuf::from("directory/nested_file")
+                entry::new("root_file".to_string()),
+                entry::new("directory/nested_file".to_string())
             ],
             limit
         );
