@@ -17,7 +17,7 @@ impl Entry {
         }
 
         let mut overall_score = 0.0;
-        let path_length = self.path.chars().count();
+        let path_length = self.path.to_string_lossy().chars().count();
 
         let mut last_char = ' ';
 
@@ -26,7 +26,7 @@ impl Entry {
 
             // Look for the query's character in the path's index, bumping
             // the character score up for each occurrence in the path.
-            match index.get(&query_char) {
+            match self.index.get(&query_char) {
                 Some(occurrences) => character_score += occurrences.len() as f32,
                 None => {
                     // If this query character doesn't exist in the path,
@@ -39,7 +39,7 @@ impl Entry {
             if query_char_index > 0 {
                 // Lookup the previous query character's matching indices in the
                 // path; we'll check to see if they're the preceding character.
-                match index.get(&last_char) {
+                match self.index.get(&last_char) {
                     Some(occurrences) => {
                         // If the last query character matched the previous path
                         // character, there are at least two consecutive characters
@@ -69,14 +69,14 @@ impl Entry {
 
 fn index_path(path: &str) -> HashMap<char, Vec<usize>> {
     let mut index: HashMap<char, Vec<usize>> = HashMap::new();
-    for (char_index, subject_char) in subject.chars().enumerate() {
-        if index.contains_key(&subject_char) {
-            match index.get_mut(&subject_char) {
+    for (char_index, path_char) in path.chars().enumerate() {
+        if index.contains_key(&path_char) {
+            match index.get_mut(&path_char) {
                Some(occurrences) => occurrences.push(char_index),
                None => ()
             }
         } else {
-           index.insert(subject_char, vec![char_index]);
+           index.insert(path_char, vec![char_index]);
         }
     }
 

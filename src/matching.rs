@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 use std::cmp::Ordering;
 use std::collections::hash_map::HashMap;
+use entry::Entry;
 
 #[derive(Debug, PartialEq)]
 pub struct Result {
@@ -24,16 +25,16 @@ pub struct Result {
 ///
 /// assert_eq!(matches[0].path.to_str().unwrap(), "lib.rs");
 /// ```
-pub fn find(needle: &str, haystack: &Vec<PathBuf>, max_results: usize) -> Vec<Result> {
+pub fn find(needle: &str, haystack: &Vec<Entry>, max_results: usize) -> Vec<Result> {
     let mut results = Vec::new();
 
     // Calculate a score for each of the haystack entries.
-    for path in haystack.iter() {
-        match path.to_str() {
+    for entry in haystack.iter() {
+        match entry.path.to_str() {
             Some(path_string) => {
                 results.push(Result{
-                    path: path.clone(),
-                    score: similarity(needle, path_string)
+                    path: entry.path.clone(),
+                    score: entry.similarity(needle)
                 });
             },
             None => (),
