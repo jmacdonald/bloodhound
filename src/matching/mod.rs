@@ -1,4 +1,5 @@
 pub mod entry;
+mod fragment;
 
 use std::path::PathBuf;
 use std::cmp::Ordering;
