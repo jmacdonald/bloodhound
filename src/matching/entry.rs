@@ -91,6 +91,7 @@ pub fn new(path: String) -> Entry {
     }
 }
 
+#[cfg(test)]
 mod tests {
     use super::new;
 
