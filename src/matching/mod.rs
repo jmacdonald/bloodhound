@@ -1,6 +1,8 @@
+pub mod entry;
+
 use std::path::PathBuf;
 use std::cmp::Ordering;
-use entry::Entry;
+use matching::entry::Entry;
 
 #[derive(Debug, PartialEq)]
 pub struct Result {
@@ -16,7 +18,7 @@ pub struct Result {
 /// # Examples
 ///
 /// ```rust
-/// use bloodhound::entry;
+/// use bloodhound::matching::entry;
 /// use std::path::PathBuf;
 /// use bloodhound::matching::find;
 ///
@@ -58,7 +60,7 @@ pub fn find(needle: &str, haystack: &Vec<Entry>, max_results: usize) -> Vec<Resu
 
 #[cfg(test)]
 mod tests {
-    use entry;
+    use super::entry;
     use super::find;
     use std::path::PathBuf;
 

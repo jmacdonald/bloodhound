@@ -1,6 +1,5 @@
 use matching;
-use entry;
-use entry::Entry;
+use matching::entry::Entry;
 
 use std::fs;
 use std::fs::{PathExt, DirEntry};
@@ -60,7 +59,7 @@ impl Index {
                 // Put all of the file-based Path entries into the index.
                 for entry in entries {
                     match relative_entry_path(entry, prefix_length) {
-                        Some(entry_path) => self.entries.push(entry::new(entry_path)),
+                        Some(entry_path) => self.entries.push(matching::entry::new(entry_path)),
                         _ => (),
                     }
                 }
@@ -98,7 +97,7 @@ fn relative_entry_path(entry: Result<DirEntry, Error>, prefix_length: usize) -> 
 
 #[cfg(test)]
 mod tests {
-    use entry;
+    use matching::entry;
     use super::new;
     use std::path::PathBuf;
 
