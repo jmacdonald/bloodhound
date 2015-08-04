@@ -18,22 +18,31 @@ impl Entry {
             return 1.0;
         }
 
+        // Pre-calculate the path length as we'll be using it frequently.
         let path_length = self.path.to_string_lossy().chars().count();
 
+        // We track fragment/substring matches, which have a greater weight than
+        // a simple sum of individual character occurrences in the entry path.
         let mut match_fragments: Vec<Fragment> = Vec::new();
+
+        // This counter is used to track characters in the query that aren't in
+        // the entry's path, which has discrete weighting in the final score.
         let mut non_existent_char_count = 0;
 
+        // Look for the query's character in the path's index, bumping
+        // the character score up for each occurrence in the path.
         for query_char in query.chars() {
-            // Look for the query's character in the path's index, bumping
-            // the character score up for each occurrence in the path.
             match self.index.get(&query_char) {
                 Some(occurrences) => {
                     // Initially, we'll assume that none of the occurrences
                     // of this character have been tracked as fragments.
                     let mut unaccounted_occurrences = occurrences.clone();
 
-                    // Grow any fragment matches that also match this char.
+                    // Extend any existing fragment matches that also
+                    // have this char at the end of their existing match.
                     for fragment in match_fragments.iter_mut() {
+                        // Get the index at which this character would have to
+                        // occur to extend this particular fragment over it.
                         let target_index = fragment.next_index();
 
                         if occurrences.contains(&target_index) {
@@ -58,17 +67,28 @@ impl Entry {
 
                 },
                 None => {
+                    // Characters in the query string that
+                    // aren't in the path reduce the score;
+                    // track these so we can consider them later.
                     non_existent_char_count += 1;
                 },
             }
         }
 
-        let percent_existent = (
+        // Determine the percentage of characters in the query string that
+        // are in the entry, using the non-existent count we've calculated.
+        let non_existence_penalty = (
             path_length - non_existent_char_count) as f32 / path_length as f32;
 
-        match_fragments.iter().fold(0, |acc, ref fragment| {
+        // Calculate an exponentially-scaled score based on fragment lengths.
+        let fragment_score = match_fragments.iter().fold(0, |acc, ref fragment| {
             acc + fragment.length.pow(2)
-        }) as f32 * percent_existent / path_length as f32
+        });
+
+        // Calculate and return the similarity value. The path_length division
+        // is used to offset the increased fragment score probability for
+        // larger entry paths.
+        fragment_score as f32 * non_existence_penalty / path_length as f32
     }
 }
 
