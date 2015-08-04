@@ -5,7 +5,7 @@ extern crate bloodhound;
 
 use test::Bencher;
 use std::path::PathBuf;
-use bloodhound::entry;
+use bloodhound::matching::entry;
 use bloodhound::matching::find;
 
 #[bench]

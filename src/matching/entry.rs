@@ -1,3 +1,5 @@
+use matching::fragment;
+use matching::fragment::Fragment;
 use std::path::PathBuf;
 use std::collections::hash_map::HashMap;
 
@@ -16,54 +18,57 @@ impl Entry {
             return 1.0;
         }
 
-        let mut overall_score = 0.0;
         let path_length = self.path.to_string_lossy().chars().count();
 
-        let mut last_char = ' ';
+        let mut match_fragments: Vec<Fragment> = Vec::new();
+        let mut non_existent_char_count = 0;
 
-        for (query_char_index, query_char) in query.chars().enumerate() {
-            let mut character_score = 0.0;
-
+        for query_char in query.chars() {
             // Look for the query's character in the path's index, bumping
             // the character score up for each occurrence in the path.
             match self.index.get(&query_char) {
-                Some(occurrences) => character_score += occurrences.len() as f32,
+                Some(occurrences) => {
+                    // Initially, we'll assume that none of the occurrences
+                    // of this character have been tracked as fragments.
+                    let mut unaccounted_occurrences = occurrences.clone();
+
+                    // Grow any fragment matches that also match this char.
+                    for fragment in match_fragments.iter_mut() {
+                        let target_index = fragment.next_index();
+
+                        if occurrences.contains(&target_index) {
+                            // Since this character match is covered by this
+                            // fragment, remove it from the unaccounted set.
+                            match unaccounted_occurrences.iter().position(|&o| o == target_index) {
+                                Some(position) => {
+                                    unaccounted_occurrences.remove(position);
+                                },
+                                None => (),
+                            }
+
+                            // Bump the fragment's length to cover this char.
+                            fragment.increase_length();
+                        }
+                    }
+
+                    // Create fragment matches for any unaccounted occurrences.
+                    for occurrence_index in unaccounted_occurrences.iter() {
+                        match_fragments.push(fragment::new(*occurrence_index));
+                    }
+
+                },
                 None => {
-                    // If this query character doesn't exist in the path,
-                    // penalize the overall score.
-                    overall_score -= 10.0;
+                    non_existent_char_count += 1;
                 },
             }
-
-            // Check for consecutive character matches.
-            if query_char_index > 0 {
-                // Lookup the previous query character's matching indices in the
-                // path; we'll check to see if they're the preceding character.
-                match self.index.get(&last_char) {
-                    Some(occurrences) => {
-                        // If the last query character matched the previous path
-                        // character, there are at least two consecutive characters
-                        // that match; bump the character score to account for that.
-                        if occurrences.contains(&(query_char_index-1)) {
-                            character_score += 1.0;
-                        }
-                    },
-                    None => (),
-                }
-            }
-
-            // Limit the character score to a maximum value
-            // of "1" and add it to the overall score.
-            character_score /= path_length as f32;
-            overall_score += character_score;
-
-            // Track the current char so that we can check
-            // for consecutive matches on the next iteration.
-            last_char = query_char;
         }
 
-        // Return an overall score, limited to a maximum value of "1".
-        (overall_score / path_length as f32).max(0.0)
+        let percent_existent = (
+            path_length - non_existent_char_count) as f32 / path_length as f32;
+
+        match_fragments.iter().fold(0, |acc, ref fragment| {
+            acc + fragment.length.pow(2)
+        }) as f32 * percent_existent / path_length as f32
     }
 }
 
@@ -109,7 +114,7 @@ mod tests {
 
     #[test]
     fn similarity_scores_based_on_term_length() {
-        let long_entry = new("houndhound".to_string());
+        let long_entry = new("hound library".to_string());
         let differing_length_score = long_entry.similarity("houn");
 
         // Don't use a perfect match, since those product a perfect score.
@@ -124,7 +129,7 @@ mod tests {
         let entry = new("hound".to_string());
 
         // Don't use a perfect match, since those product a perfect score.
-        let properly_ordered_score = entry.similarity("houn");
+        let properly_ordered_score = entry.similarity(" houn");
 
         let improperly_ordered_score = entry.similarity("nuoh");
         assert!(properly_ordered_score > improperly_ordered_score);
