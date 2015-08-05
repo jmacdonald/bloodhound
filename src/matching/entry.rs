@@ -77,8 +77,13 @@ impl Entry {
 
         // Determine the percentage of characters in the query string that
         // are in the entry, using the non-existent count we've calculated.
-        let non_existence_penalty = (
-            path_length - non_existent_char_count) as f32 / path_length as f32;
+        let non_existence_penalty =
+            // Guard against a potential arithmetic overflow here.
+            if non_existent_char_count >= path_length {
+                return 0.0f32
+            } else {
+                (path_length - non_existent_char_count) as f32 / path_length as f32
+            };
 
         // Calculate an exponentially-scaled score based on fragment lengths.
         let fragment_score = match_fragments.iter().fold(0, |acc, ref fragment| {
@@ -164,5 +169,11 @@ mod tests {
 
         let subset_score = entry.similarity("houn");
         assert!(subset_score > non_matching_score);
+    }
+
+    #[test]
+    fn similarity_score_is_zero_for_larger_query_with_no_matching_characters() {
+        let entry = new("amp".to_string());
+        assert_eq!(entry.similarity("hound"), 0.0f32);
     }
 }
