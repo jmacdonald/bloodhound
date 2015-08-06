@@ -29,8 +29,7 @@ impl Entry {
         // the entry's path, which has discrete weighting in the final score.
         let mut non_existent_char_count = 0;
 
-        // Look for the query's character in the path's index, bumping
-        // the character score up for each occurrence in the path.
+        // Look for the query's character in the path's index.
         for query_char in query.chars() {
             match self.index.get(&query_char) {
                 Some(occurrences) => {
