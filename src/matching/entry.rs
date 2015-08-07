@@ -13,11 +13,6 @@ impl Entry {
     /// Compares the query string to the entry,
     /// and returns a score between 0 and 1.
     pub fn similarity(&self, query: &str) -> f32 {
-        // Exact matches produce a perfect score.
-        if query == self.path.to_string_lossy() {
-            return 1.0;
-        }
-
         // Pre-calculate the path length as we'll be using it frequently.
         let path_length = self.path.to_string_lossy().chars().count();
 
@@ -123,12 +118,6 @@ pub fn new(path: String) -> Entry {
 #[cfg(test)]
 mod tests {
     use super::new;
-
-    #[test]
-    fn similarity_correctly_scores_perfect_matches() {
-        let entry = new("src/hound.rs".to_string());
-        assert_eq!(entry.similarity("src/hound.rs"), 1.0);
-    }
 
     #[test]
     fn similarity_correctly_scores_completely_different_terms() {
