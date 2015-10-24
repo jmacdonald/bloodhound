@@ -1,4 +1,5 @@
 #![feature(path_ext)]
 #![feature(fs_walk)]
-pub mod index;
+mod index;
+pub use index::Index;
 pub mod matching;

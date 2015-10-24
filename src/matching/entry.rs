@@ -1,4 +1,3 @@
-use matching::fragment;
 use matching::fragment::Fragment;
 use std::path::PathBuf;
 use std::collections::hash_map::HashMap;
@@ -10,6 +9,15 @@ pub struct Entry {
 }
 
 impl Entry {
+    /// Builds and returns a new entry.
+    pub fn new(path: String) -> Entry {
+        Entry{
+            // Build the index before we transfer ownership of path.
+            index: index_path(&path),
+            path: PathBuf::from(path),
+        }
+    }
+
     /// Compares the query string to the entry,
     /// and returns a score between 0 and 1.
     pub fn similarity(&self, query: &str) -> f32 {
@@ -56,7 +64,7 @@ impl Entry {
 
                     // Create fragment matches for any unaccounted occurrences.
                     for occurrence_index in unaccounted_occurrences.iter() {
-                        match_fragments.push(fragment::new(*occurrence_index));
+                        match_fragments.push(Fragment::new(*occurrence_index));
                     }
 
                 },
@@ -107,31 +115,23 @@ fn index_path(path: &str) -> HashMap<char, Vec<usize>> {
     index
 }
 
-pub fn new(path: String) -> Entry {
-    Entry{
-        // Build the index before we transfer ownership of path.
-        index: index_path(&path),
-        path: PathBuf::from(path),
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use super::new;
+    use super::Entry;
 
     #[test]
     fn similarity_correctly_scores_completely_different_terms() {
-        let entry = new("src".to_string());
+        let entry = Entry::new("src".to_string());
         assert_eq!(entry.similarity("lib"), 0.0);
     }
 
     #[test]
     fn similarity_scores_based_on_term_length() {
-        let long_entry = new("hound library".to_string());
+        let long_entry = Entry::new("hound library".to_string());
         let differing_length_score = long_entry.similarity("houn");
 
         // Don't use a perfect match, since those product a perfect score.
-        let short_entry = new("hound".to_string());
+        let short_entry = Entry::new("hound".to_string());
         let same_length_score = short_entry.similarity("houn");
 
         assert!(same_length_score > differing_length_score);
@@ -139,7 +139,7 @@ mod tests {
 
     #[test]
     fn similarity_score_increases_for_consecutive_matches() {
-        let entry = new("hound".to_string());
+        let entry = Entry::new("hound".to_string());
 
         // Don't use a perfect match, since those product a perfect score.
         let properly_ordered_score = entry.similarity(" houn");
@@ -150,7 +150,7 @@ mod tests {
 
     #[test]
     fn similarity_score_decreases_for_non_matching_characters() {
-        let entry = new("hound".to_string());
+        let entry = Entry::new("hound".to_string());
 
         // Don't use a perfect match, since those product a perfect score.
         let non_matching_score = entry.similarity("houns");
@@ -161,7 +161,7 @@ mod tests {
 
     #[test]
     fn similarity_score_is_zero_for_larger_query_with_no_matching_characters() {
-        let entry = new("amp".to_string());
+        let entry = Entry::new("amp".to_string());
         assert_eq!(entry.similarity("hound"), 0.0f32);
     }
 }

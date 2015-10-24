@@ -1,5 +1,5 @@
 use matching;
-use matching::entry::Entry;
+use matching::Entry;
 
 use std::fs;
 use std::fs::{PathExt, DirEntry};
@@ -12,6 +12,13 @@ pub struct Index {
 }
 
 impl Index {
+    pub fn new(path: PathBuf) -> Index {
+        Index {
+            path: path,
+            entries: Vec::new(),
+        }
+    }
+
     /// Finds all files inside and beneath the index path
     /// and adds them to the index entries vector.
     pub fn populate(&mut self) {
@@ -59,20 +66,13 @@ impl Index {
                 // Put all of the file-based Path entries into the index.
                 for entry in entries {
                     match relative_entry_path(entry, prefix_length) {
-                        Some(entry_path) => self.entries.push(matching::entry::new(entry_path)),
+                        Some(entry_path) => self.entries.push(Entry::new(entry_path)),
                         _ => (),
                     }
                 }
             },
             Err(_) => (),
         }
-    }
-}
-
-pub fn new(path: PathBuf) -> Index {
-    Index {
-        path: path,
-        entries: Vec::new(),
     }
 }
 
@@ -97,17 +97,17 @@ fn relative_entry_path(entry: Result<DirEntry, Error>, prefix_length: usize) -> 
 
 #[cfg(test)]
 mod tests {
-    use matching::entry;
-    use super::new;
+    use super::Index;
+    use matching::Entry;
     use std::path::PathBuf;
 
     #[test]
     fn populate_adds_all_files_to_entries() {
         let path = PathBuf::from("tests/sample");
-        let mut index = new(path);
+        let mut index = Index::new(path);
         let expected_entries = vec![
-            entry::new("root_file".to_string()),
-            entry::new("directory/nested_file".to_string())
+            Entry::new("root_file".to_string()),
+            Entry::new("directory/nested_file".to_string())
         ];
         index.populate();
 
@@ -117,15 +117,15 @@ mod tests {
     #[test]
     fn find_defers_to_matching_module() {
         let path = PathBuf::from("tests/sample");
-        let mut index = new(path);
+        let mut index = Index::new(path);
         index.populate();
         let term = "root";
         let limit = 5;
         let expected_results = ::matching::find(
             term,
             &vec![
-                entry::new("root_file".to_string()),
-                entry::new("directory/nested_file".to_string())
+                Entry::new("root_file".to_string()),
+                Entry::new("directory/nested_file".to_string())
             ],
             limit
         );
