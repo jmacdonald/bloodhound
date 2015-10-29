@@ -1,5 +1,4 @@
 use matching;
-use matching::Entry;
 
 use std::fs;
 use std::fs::{PathExt, DirEntry};
@@ -8,7 +7,7 @@ use std::io::Error;
 
 pub struct Index {
     path: PathBuf,
-    entries: Vec<Entry>,
+    entries: Vec<PathBuf>,
 }
 
 impl Index {
@@ -66,7 +65,7 @@ impl Index {
                 // Put all of the file-based Path entries into the index.
                 for entry in entries {
                     match relative_entry_path(entry, prefix_length) {
-                        Some(entry_path) => self.entries.push(Entry::new(entry_path)),
+                        Some(entry_path) => self.entries.push(PathBuf::from(entry_path)),
                         _ => (),
                     }
                 }
@@ -98,7 +97,6 @@ fn relative_entry_path(entry: Result<DirEntry, Error>, prefix_length: usize) -> 
 #[cfg(test)]
 mod tests {
     use super::Index;
-    use matching::Entry;
     use std::path::PathBuf;
 
     #[test]
@@ -106,8 +104,8 @@ mod tests {
         let path = PathBuf::from("tests/sample");
         let mut index = Index::new(path);
         let expected_entries = vec![
-            Entry::new("root_file".to_string()),
-            Entry::new("directory/nested_file".to_string())
+            PathBuf::from("root_file".to_string()),
+            PathBuf::from("directory/nested_file".to_string())
         ];
         index.populate();
 
@@ -124,8 +122,8 @@ mod tests {
         let expected_results = ::matching::find(
             term,
             &vec![
-                Entry::new("root_file".to_string()),
-                Entry::new("directory/nested_file".to_string())
+                PathBuf::from("root_file".to_string()),
+                PathBuf::from("directory/nested_file".to_string())
             ],
             limit
         );
