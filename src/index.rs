@@ -1,7 +1,7 @@
 use matching;
 
 use std::fs;
-use std::fs::{PathExt, DirEntry};
+use std::fs::DirEntry;
 use std::path::{Path, PathBuf};
 use std::io::Error;
 
