@@ -1,3 +1,7 @@
+### 0.2.2
+
+* Use walkdir crate instead of deprecated fs::walk_dir.
+
 ### 0.2.1
 
 * Removed deprecated PathExt usage.
