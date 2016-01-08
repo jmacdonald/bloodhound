@@ -1,11 +1,32 @@
-use matching;
+extern crate fragment;
 
+use self::fragment::matching;
 use walkdir::{DirEntry, Error, WalkDir};
 use std::path::PathBuf;
+use std::clone::Clone;
 
 pub struct Index {
     path: PathBuf,
-    entries: Vec<PathBuf>,
+    entries: Vec<IndexedPath>,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct IndexedPath(PathBuf);
+
+impl ToString for IndexedPath {
+    fn to_string(&self) -> String {
+        self.0.to_string_lossy().into_owned()
+    }
+}
+
+impl Clone for IndexedPath {
+    fn clone(&self) -> Self {
+        IndexedPath(self.0.clone())
+    }
+
+    fn clone_from(&mut self, source: &Self) {
+        self.0 = source.0.clone()
+    }
 }
 
 impl Index {
@@ -29,13 +50,13 @@ impl Index {
         // Start indexing at the specified path.
         for entry in WalkDir::new(&self.path) {
             match relative_entry_path(entry, prefix_length) {
-                Some(entry_path) => self.entries.push(PathBuf::from(entry_path)),
+                Some(entry_path) => self.entries.push(IndexedPath(PathBuf::from(entry_path))),
                 _ => (),
             }
         }
     }
 
-    pub fn find(&self, term: &str, limit: usize) -> Vec<matching::Result> {
+    pub fn find(&self, term: &str, limit: usize) -> Vec<matching::Result<IndexedPath>> {
         matching::find(term, &self.entries, limit)
     }
 }
@@ -61,16 +82,19 @@ fn relative_entry_path(entry: Result<DirEntry, Error>, prefix_length: usize) -> 
 
 #[cfg(test)]
 mod tests {
-    use super::Index;
+    extern crate fragment;
+
+    use super::{Index, IndexedPath};
     use std::path::PathBuf;
+    use self::fragment::matching;
 
     #[test]
     fn populate_adds_all_files_to_entries() {
         let path = PathBuf::from("tests/sample");
         let mut index = Index::new(path);
         let expected_entries = vec![
-            PathBuf::from("directory/nested_file".to_string()),
-            PathBuf::from("root_file".to_string())
+            IndexedPath(PathBuf::from("directory/nested_file")),
+            IndexedPath(PathBuf::from("root_file"))
         ];
         index.populate();
 
@@ -84,11 +108,11 @@ mod tests {
         index.populate();
         let term = "root";
         let limit = 5;
-        let expected_results = ::matching::find(
+        let expected_results = matching::find(
             term,
             &vec![
-                PathBuf::from("root_file".to_string()),
-                PathBuf::from("directory/nested_file".to_string())
+                IndexedPath(PathBuf::from("root_file")),
+                IndexedPath(PathBuf::from("directory/nested_file"))
             ],
             limit
         );
