@@ -1,3 +1,7 @@
+### 0.2.3
+
+* Use extracted fragment library for matching.
+
 ### 0.2.2
 
 * Use walkdir crate instead of deprecated fs::walk_dir.
