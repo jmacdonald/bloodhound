@@ -43,7 +43,7 @@ impl Index {
         // The entries listed by read_dir include the root index path; we want
         // relative paths, so we get this length so that we can strip it.
         let prefix_length = match self.path.to_str() {
-            Some(path) => path.len()+1,
+            Some(path) => path.len() + 1,
             None => return,
         };
 
@@ -56,8 +56,14 @@ impl Index {
         }
     }
 
-    pub fn find(&self, term: &str, limit: usize) -> Vec<matching::Result<IndexedPath>> {
+    pub fn find(&self, term: &str, limit: usize) -> Vec<PathBuf> {
         matching::find(term, &self.entries, limit)
+            .into_iter()
+            .map(|r| {
+                let IndexedPath(other_thing) = r.clone();
+                other_thing
+            })
+            .collect()
     }
 }
 
@@ -65,17 +71,21 @@ impl Index {
 /// returning None if any errors occur or if the entry is not a file.
 fn relative_entry_path(entry: Result<DirEntry, Error>, prefix_length: usize) -> Option<String> {
     match entry {
-        Ok(e) => match e.path().metadata() {
-            Ok(metadata) => if metadata.is_file() {
-                match e.path().to_str() {
-                    Some(path) => Some(path[prefix_length..].to_string()),
-                    _ => None,
+        Ok(e) => {
+            match e.path().metadata() {
+                Ok(metadata) => {
+                    if metadata.is_file() {
+                        match e.path().to_str() {
+                            Some(path) => Some(path[prefix_length..].to_string()),
+                            _ => None,
+                        }
+                    } else {
+                        None
+                    }
                 }
-            } else {
-                None
-            },
-            _ => None,
-        },
+                _ => None,
+            }
+        }
         _ => None,
     }
 }
@@ -92,10 +102,8 @@ mod tests {
     fn populate_adds_all_files_to_entries() {
         let path = PathBuf::from("tests/sample");
         let mut index = Index::new(path);
-        let expected_entries = vec![
-            IndexedPath(PathBuf::from("directory/nested_file")),
-            IndexedPath(PathBuf::from("root_file"))
-        ];
+        let expected_entries = vec![IndexedPath(PathBuf::from("directory/nested_file")),
+                                    IndexedPath(PathBuf::from("root_file"))];
         index.populate();
 
         assert_eq!(index.entries, expected_entries);
@@ -108,15 +116,14 @@ mod tests {
         index.populate();
         let term = "root";
         let limit = 5;
-        let expected_results = matching::find(
-            term,
-            &vec![
-                IndexedPath(PathBuf::from("root_file")),
-                IndexedPath(PathBuf::from("directory/nested_file"))
-            ],
-            limit
-        );
 
-        assert_eq!(index.find(term, limit), expected_results);
+        // Get a string version of the results (PathBuf doesn't implement the display trait).
+        let results: Vec<String> = index.find(term, limit)
+                                        .iter()
+                                        .map(|r| r.to_string_lossy().into_owned())
+                                        .collect();
+
+        assert_eq!(results,
+                   vec!["root_file".to_string(), "directory/nested_file".to_string()]);
     }
 }
