@@ -1,3 +1,7 @@
+### 0.2.4
+
+* Update fragment dependency to v0.1.2.
+
 ### 0.2.3
 
 * Use extracted fragment library for matching.
