@@ -96,7 +96,6 @@ mod tests {
 
     use super::{Index, IndexedPath};
     use std::path::PathBuf;
-    use self::fragment::matching;
 
     #[test]
     fn populate_adds_all_files_to_entries() {
@@ -123,7 +122,6 @@ mod tests {
                                         .map(|r| r.to_string_lossy().into_owned())
                                         .collect();
 
-        assert_eq!(results,
-                   vec!["root_file".to_string(), "directory/nested_file".to_string()]);
+        assert_eq!(results, vec!["root_file".to_string()]);
     }
 }
