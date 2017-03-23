@@ -1,3 +1,7 @@
+### 0.3.0
+
+* Add case_insensitive search option
+
 ### 0.2.4
 
 * Update fragment dependency to v0.1.2.
