@@ -56,8 +56,8 @@ impl Index {
         }
     }
 
-    pub fn find(&self, term: &str, limit: usize) -> Vec<PathBuf> {
-        matching::find(term, &self.entries, limit)
+    pub fn find(&self, term: &str, limit: usize, case_sensitive: bool) -> Vec<PathBuf> {
+        matching::find(term, &self.entries, limit, case_sensitive)
             .into_iter()
             .map(|r| {
                 let IndexedPath(other_thing) = r.clone();
@@ -117,7 +117,7 @@ mod tests {
         let limit = 5;
 
         // Get a string version of the results (PathBuf doesn't implement the display trait).
-        let results: Vec<String> = index.find(term, limit)
+        let results: Vec<String> = index.find(term, limit, false)
                                         .iter()
                                         .map(|r| r.to_string_lossy().into_owned())
                                         .collect();
