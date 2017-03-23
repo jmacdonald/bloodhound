@@ -49,10 +49,11 @@ impl Index {
 
         // Start indexing at the specified path.
         for entry in WalkDir::new(&self.path) {
-            match relative_entry_path(entry, prefix_length) {
-                Some(entry_path) => self.entries.push(IndexedPath(PathBuf::from(entry_path))),
-                _ => (),
-            }
+            relative_entry_path(entry, prefix_length).map(|entry_path| {
+                self.entries.push(
+                    IndexedPath(PathBuf::from(entry_path))
+                );
+            });
         }
     }
 
@@ -70,24 +71,17 @@ impl Index {
 /// Transforms a DirEntry object into an optional relative path string,
 /// returning None if any errors occur or if the entry is not a file.
 fn relative_entry_path(entry: Result<DirEntry, Error>, prefix_length: usize) -> Option<String> {
-    match entry {
-        Ok(e) => {
-            match e.path().metadata() {
-                Ok(metadata) => {
-                    if metadata.is_file() {
-                        match e.path().to_str() {
-                            Some(path) => Some(path[prefix_length..].to_string()),
-                            _ => None,
-                        }
-                    } else {
-                        None
-                    }
-                }
-                _ => None,
+    entry.ok().and_then(|e| {
+        // Limit path look-ups to files.
+        e.path().metadata().ok().and_then(|metadata| {
+            if metadata.is_file() {
+                // Map the absolute path to a relative one.
+                e.path().to_str().map(|path| path[prefix_length..].to_string())
+            } else {
+                None
             }
-        }
-        _ => None,
-    }
+        })
+    })
 }
 
 #[cfg(test)]
