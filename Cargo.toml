@@ -11,4 +11,4 @@ keywords = ["fuzzy", "file", "find"]
 
 [dependencies]
 fragment = "0.2.0"
-walkdir = "0.1.5"
+walkdir = "2.0.1"

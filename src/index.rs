@@ -95,8 +95,8 @@ mod tests {
     fn populate_adds_all_files_to_entries() {
         let path = PathBuf::from("tests/sample");
         let mut index = Index::new(path);
-        let expected_entries = vec![IndexedPath(PathBuf::from("directory/nested_file")),
-                                    IndexedPath(PathBuf::from("root_file"))];
+        let expected_entries = vec![IndexedPath(PathBuf::from("root_file")),
+                                    IndexedPath(PathBuf::from("directory/nested_file"))];
         index.populate();
 
         assert_eq!(index.entries, expected_entries);
