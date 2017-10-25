@@ -3,13 +3,14 @@ use glob::Pattern;
 use walkdir::{DirEntry, Error, WalkDir};
 use std::path::PathBuf;
 use std::clone::Clone;
+use std::cmp::{Ord, PartialOrd};
 
 pub struct Index {
     path: PathBuf,
     entries: Vec<IndexedPath>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct IndexedPath(PathBuf);
 
 impl ToString for IndexedPath {
@@ -104,9 +105,10 @@ mod tests {
     fn populate_adds_all_files_to_entries() {
         let path = PathBuf::from("tests/sample");
         let mut index = Index::new(path);
-        let expected_entries = vec![IndexedPath(PathBuf::from("root_file")),
-                                    IndexedPath(PathBuf::from("directory/nested_file"))];
+        let expected_entries = vec![IndexedPath(PathBuf::from("directory/nested_file")),
+                                    IndexedPath(PathBuf::from("root_file"))];
         index.populate(None);
+        index.entries.sort();
 
         assert_eq!(index.entries, expected_entries);
     }
