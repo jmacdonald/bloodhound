@@ -1,6 +1,5 @@
-extern crate fragment;
-
-use self::fragment::matching;
+use fragment::matching;
+use glob::Pattern;
 use walkdir::{DirEntry, Error, WalkDir};
 use std::path::PathBuf;
 use std::clone::Clone;
@@ -33,13 +32,13 @@ impl Index {
     pub fn new(path: PathBuf) -> Index {
         Index {
             path: path,
-            entries: Vec::new(),
+            entries: Vec::new()
         }
     }
 
     /// Finds all files inside and beneath the index path
     /// and adds them to the index entries vector.
-    pub fn populate(&mut self) {
+    pub fn populate(&mut self, exclusions: Option<Vec<Pattern>>) {
         // The entries listed by read_dir include the root index path; we want
         // relative paths, so we get this length so that we can strip it.
         let prefix_length = match self.path.to_str() {
@@ -48,7 +47,17 @@ impl Index {
         };
 
         // Start indexing at the specified path.
-        for entry in WalkDir::new(&self.path) {
+        let filtered_entries = WalkDir::new(&self.path).into_iter().filter_entry(|entry| {
+            if let Some(ref exclusions) = exclusions {
+                !exclusions.iter().any(|exclusion| {
+                    exclusion.matches(entry.path().to_string_lossy().as_ref())
+                })
+            } else {
+                true
+            }
+        });
+
+        for entry in filtered_entries {
             relative_entry_path(entry, prefix_length).map(|entry_path| {
                 self.entries.push(
                     IndexedPath(PathBuf::from(entry_path))
@@ -88,7 +97,7 @@ fn relative_entry_path(entry: Result<DirEntry, Error>, prefix_length: usize) -> 
 mod tests {
     extern crate fragment;
 
-    use super::{Index, IndexedPath};
+    use super::{Index, IndexedPath, Pattern};
     use std::path::PathBuf;
 
     #[test]
@@ -97,7 +106,17 @@ mod tests {
         let mut index = Index::new(path);
         let expected_entries = vec![IndexedPath(PathBuf::from("root_file")),
                                     IndexedPath(PathBuf::from("directory/nested_file"))];
-        index.populate();
+        index.populate(None);
+
+        assert_eq!(index.entries, expected_entries);
+    }
+
+    #[test]
+    fn populate_respects_exclusions() {
+        let path = PathBuf::from("tests/sample");
+        let mut index = Index::new(path);
+        let expected_entries = vec![IndexedPath(PathBuf::from("root_file"))];
+        index.populate(Some(vec![Pattern::new("**/directory").unwrap()]));
 
         assert_eq!(index.entries, expected_entries);
     }
@@ -106,7 +125,7 @@ mod tests {
     fn find_defers_to_matching_module() {
         let path = PathBuf::from("tests/sample");
         let mut index = Index::new(path);
-        index.populate();
+        index.populate(None);
         let term = "root";
         let limit = 5;
 
