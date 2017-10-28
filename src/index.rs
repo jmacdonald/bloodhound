@@ -1,9 +1,8 @@
 use fragment::matching;
-use glob::Pattern;
+use ExclusionPattern;
 use walkdir::{DirEntry, Error, WalkDir};
 use std::path::PathBuf;
 use std::clone::Clone;
-use std::cmp::{Ord, PartialOrd};
 
 pub struct Index {
     path: PathBuf,
@@ -39,7 +38,7 @@ impl Index {
 
     /// Finds all files inside and beneath the index path
     /// and adds them to the index entries vector.
-    pub fn populate(&mut self, exclusions: Option<Vec<Pattern>>) {
+    pub fn populate(&mut self, exclusions: Option<Vec<ExclusionPattern>>) {
         // The entries listed by read_dir include the root index path; we want
         // relative paths, so we get this length so that we can strip it.
         let prefix_length = match self.path.to_str() {
@@ -98,7 +97,7 @@ fn relative_entry_path(entry: Result<DirEntry, Error>, prefix_length: usize) -> 
 mod tests {
     extern crate fragment;
 
-    use super::{Index, IndexedPath, Pattern};
+    use super::{Index, IndexedPath, ExclusionPattern};
     use std::path::PathBuf;
 
     #[test]
@@ -118,7 +117,7 @@ mod tests {
         let path = PathBuf::from("tests/sample");
         let mut index = Index::new(path);
         let expected_entries = vec![IndexedPath(PathBuf::from("root_file"))];
-        index.populate(Some(vec![Pattern::new("**/directory").unwrap()]));
+        index.populate(Some(vec![ExclusionPattern::new("**/directory").unwrap()]));
 
         assert_eq!(index.entries, expected_entries);
     }
