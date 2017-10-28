@@ -1,3 +1,8 @@
+### 0.4.0
+
+* Added the ability to exclude entries using glob patterns when populating index.
+* Updated walkdir dependency to v2.0.1.
+
 ### 0.3.0
 
 * Add case_insensitive search option
