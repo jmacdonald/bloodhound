@@ -169,4 +169,21 @@ mod tests {
 
         assert_eq!(results, vec!["root_file".to_string()]);
     }
+
+    #[test]
+    fn find_always_uses_case_sensitive_queries() {
+        let path = PathBuf::from("tests/sample");
+        let mut index = Index::new(path);
+        index.populate(None, true);
+        let term = "Root";
+        let limit = 5;
+
+        // Get a string version of the results (PathBuf doesn't implement the display trait).
+        let results: Vec<String> = index.find(term, limit)
+                                        .iter()
+                                        .map(|r| r.to_string_lossy().into_owned())
+                                        .collect();
+
+        assert!(results.is_empty());
+    }
 }
