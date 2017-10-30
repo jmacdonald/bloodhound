@@ -1,3 +1,10 @@
+### 0.5.0
+
+* Case sensitivity is now set when populating the index. Converting string
+  representations to lowercase is expensive; doing it once during index
+  population (rather than for every subsequent call to find) is considerably
+  more efficient.
+
 ### 0.4.0
 
 * Added the ability to exclude entries using glob patterns when populating index.
