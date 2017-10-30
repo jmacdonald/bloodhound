@@ -38,7 +38,7 @@ impl Index {
 
     /// Finds all files inside and beneath the index path
     /// and adds them to the index entries vector.
-    pub fn populate(&mut self, exclusions: Option<Vec<ExclusionPattern>>) {
+    pub fn populate(&mut self, exclusions: Option<Vec<ExclusionPattern>>, case_sensitive: bool) {
         // The entries listed by read_dir include the root index path; we want
         // relative paths, so we get this length so that we can strip it.
         let prefix_length = match self.path.to_str() {
@@ -60,7 +60,11 @@ impl Index {
         for entry in filtered_entries {
             relative_entry_path(entry, prefix_length).map(|entry_path| {
                 self.entries.push(
-                    IndexedPath(PathBuf::from(entry_path))
+                    if case_sensitive {
+                        IndexedPath(PathBuf::from(entry_path))
+                    } else {
+                        IndexedPath(PathBuf::from(entry_path.to_lowercase()))
+                    }
                 );
             });
         }
@@ -104,9 +108,10 @@ mod tests {
     fn populate_adds_all_files_to_entries() {
         let path = PathBuf::from("tests/sample");
         let mut index = Index::new(path);
-        let expected_entries = vec![IndexedPath(PathBuf::from("directory/nested_file")),
+        let expected_entries = vec![IndexedPath(PathBuf::from("directory/Capitalized_file")),
+                                    IndexedPath(PathBuf::from("directory/nested_file")),
                                     IndexedPath(PathBuf::from("root_file"))];
-        index.populate(None);
+        index.populate(None, true);
         index.entries.sort();
 
         assert_eq!(index.entries, expected_entries);
@@ -117,7 +122,33 @@ mod tests {
         let path = PathBuf::from("tests/sample");
         let mut index = Index::new(path);
         let expected_entries = vec![IndexedPath(PathBuf::from("root_file"))];
-        index.populate(Some(vec![ExclusionPattern::new("**/directory").unwrap()]));
+        index.populate(Some(vec![ExclusionPattern::new("**/directory").unwrap()]), true);
+
+        assert_eq!(index.entries, expected_entries);
+    }
+
+    #[test]
+    fn populate_lowercases_entries_when_case_sensitive_is_false() {
+        let path = PathBuf::from("tests/sample");
+        let mut index = Index::new(path);
+        let expected_entries = vec![IndexedPath(PathBuf::from("directory/capitalized_file")),
+                                    IndexedPath(PathBuf::from("directory/nested_file")),
+                                    IndexedPath(PathBuf::from("root_file"))];
+        index.populate(None, false);
+        index.entries.sort();
+
+        assert_eq!(index.entries, expected_entries);
+    }
+
+    #[test]
+    fn populate_lowercases_entries_when_case_sensitive_is_true() {
+        let path = PathBuf::from("tests/sample");
+        let mut index = Index::new(path);
+        let expected_entries = vec![IndexedPath(PathBuf::from("directory/Capitalized_file")),
+                                    IndexedPath(PathBuf::from("directory/nested_file")),
+                                    IndexedPath(PathBuf::from("root_file"))];
+        index.populate(None, true);
+        index.entries.sort();
 
         assert_eq!(index.entries, expected_entries);
     }
@@ -126,7 +157,7 @@ mod tests {
     fn find_defers_to_matching_module() {
         let path = PathBuf::from("tests/sample");
         let mut index = Index::new(path);
-        index.populate(None);
+        index.populate(None, true);
         let term = "root";
         let limit = 5;
 
