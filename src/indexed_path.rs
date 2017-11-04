@@ -1,6 +1,10 @@
 use fragment::matching::AsStr;
 use std::path::PathBuf;
 
+/// This Path + String pair exists so that we can build the path's string
+/// representation once when populating the index, rather than on each search.
+/// It's also how we support case insensitive indexing, where we need to store
+/// a lowercased search value without modifying the case-sensitive PathBuf.
 #[derive(Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct IndexedPath {
     pub path: PathBuf,
