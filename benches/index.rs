@@ -10,6 +10,6 @@ use bloodhound::Index;
 #[bench]
 fn bench_find(b: &mut Bencher) {
     let mut index = Index::new(PathBuf::from("."));
-    index.populate(None);
+    index.populate(None, false);
     b.iter(|| index.find("match", 5));
 }
