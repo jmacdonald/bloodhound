@@ -1,3 +1,7 @@
+### 0.5.1
+
+* Updated fragment dependency to v0.3.0.
+
 ### 0.5.0
 
 * Case sensitivity is now set when populating the index. Converting string
