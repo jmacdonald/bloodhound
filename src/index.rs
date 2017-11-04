@@ -2,30 +2,11 @@ use fragment::matching;
 use ExclusionPattern;
 use walkdir::{DirEntry, Error, WalkDir};
 use std::path::PathBuf;
-use std::clone::Clone;
+use IndexedPath;
 
 pub struct Index {
     path: PathBuf,
     entries: Vec<IndexedPath>,
-}
-
-#[derive(Debug, Eq, Ord, PartialEq, PartialOrd)]
-pub struct IndexedPath(PathBuf);
-
-impl ToString for IndexedPath {
-    fn to_string(&self) -> String {
-        self.0.to_string_lossy().into_owned()
-    }
-}
-
-impl Clone for IndexedPath {
-    fn clone(&self) -> Self {
-        IndexedPath(self.0.clone())
-    }
-
-    fn clone_from(&mut self, source: &Self) {
-        self.0 = source.0.clone()
-    }
 }
 
 impl Index {
@@ -61,22 +42,23 @@ impl Index {
             relative_entry_path(entry, prefix_length).map(|entry_path| {
                 self.entries.push(
                     if case_sensitive {
-                        IndexedPath(PathBuf::from(entry_path))
+                        IndexedPath::new(
+                            PathBuf::from(entry_path)
+                        )
                     } else {
-                        IndexedPath(PathBuf::from(entry_path.to_lowercase()))
+                        IndexedPath::new(
+                            PathBuf::from(entry_path.to_lowercase())
+                        )
                     }
                 );
             });
         }
     }
 
-    pub fn find(&self, term: &str, limit: usize) -> Vec<PathBuf> {
-        matching::find(term, &self.entries, limit, true)
+    pub fn find(&self, term: &str, limit: usize) -> Vec<&PathBuf> {
+        matching::find(term, &self.entries, limit)
             .into_iter()
-            .map(|r| {
-                let IndexedPath(other_thing) = r.clone();
-                other_thing
-            })
+            .map(|result| &result.path)
             .collect()
     }
 }
@@ -108,9 +90,9 @@ mod tests {
     fn populate_adds_all_files_to_entries() {
         let path = PathBuf::from("tests/sample");
         let mut index = Index::new(path);
-        let expected_entries = vec![IndexedPath(PathBuf::from("directory/Capitalized_file")),
-                                    IndexedPath(PathBuf::from("directory/nested_file")),
-                                    IndexedPath(PathBuf::from("root_file"))];
+        let expected_entries = vec![IndexedPath::new(PathBuf::from("directory/Capitalized_file")),
+                                    IndexedPath::new(PathBuf::from("directory/nested_file")),
+                                    IndexedPath::new(PathBuf::from("root_file"))];
         index.populate(None, true);
         index.entries.sort();
 
@@ -121,7 +103,7 @@ mod tests {
     fn populate_respects_exclusions() {
         let path = PathBuf::from("tests/sample");
         let mut index = Index::new(path);
-        let expected_entries = vec![IndexedPath(PathBuf::from("root_file"))];
+        let expected_entries = vec![IndexedPath::new(PathBuf::from("root_file"))];
         index.populate(Some(vec![ExclusionPattern::new("**/directory").unwrap()]), true);
 
         assert_eq!(index.entries, expected_entries);
@@ -131,9 +113,9 @@ mod tests {
     fn populate_lowercases_entries_when_case_sensitive_is_false() {
         let path = PathBuf::from("tests/sample");
         let mut index = Index::new(path);
-        let expected_entries = vec![IndexedPath(PathBuf::from("directory/capitalized_file")),
-                                    IndexedPath(PathBuf::from("directory/nested_file")),
-                                    IndexedPath(PathBuf::from("root_file"))];
+        let expected_entries = vec![IndexedPath::new(PathBuf::from("directory/capitalized_file")),
+                                    IndexedPath::new(PathBuf::from("directory/nested_file")),
+                                    IndexedPath::new(PathBuf::from("root_file"))];
         index.populate(None, false);
         index.entries.sort();
 
@@ -144,9 +126,9 @@ mod tests {
     fn populate_lowercases_entries_when_case_sensitive_is_true() {
         let path = PathBuf::from("tests/sample");
         let mut index = Index::new(path);
-        let expected_entries = vec![IndexedPath(PathBuf::from("directory/Capitalized_file")),
-                                    IndexedPath(PathBuf::from("directory/nested_file")),
-                                    IndexedPath(PathBuf::from("root_file"))];
+        let expected_entries = vec![IndexedPath::new(PathBuf::from("directory/Capitalized_file")),
+                                    IndexedPath::new(PathBuf::from("directory/nested_file")),
+                                    IndexedPath::new(PathBuf::from("root_file"))];
         index.populate(None, true);
         index.entries.sort();
 
