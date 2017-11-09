@@ -11,7 +11,7 @@ pub struct IndexedPath {
     pub path_string: String,
 }
 
-impl<'a> AsStr for &'a IndexedPath {
+impl AsStr for IndexedPath {
     fn as_str(&self) -> &str {
         &self.path_string
     }
