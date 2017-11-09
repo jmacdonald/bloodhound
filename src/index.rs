@@ -73,23 +73,8 @@ fn relative_entry_path(entry: Result<DirEntry, Error>, prefix_length: usize) -> 
 
 #[cfg(test)]
 mod tests {
-    extern crate fragment;
-
     use super::{Index, IndexedPath, ExclusionPattern};
     use std::path::PathBuf;
-
-    #[test]
-    fn populate_adds_all_files_to_entries() {
-        let path = PathBuf::from("tests/sample");
-        let mut index = Index::new(path);
-        let expected_entries = vec![IndexedPath::new("directory/Capitalized_file", true),
-                                    IndexedPath::new("directory/nested_file", true),
-                                    IndexedPath::new("root_file", true)];
-        index.populate(None, true);
-        index.entries.sort();
-
-        assert_eq!(index.entries, expected_entries);
-    }
 
     #[test]
     fn populate_respects_exclusions() {
@@ -142,22 +127,5 @@ mod tests {
                                         .collect();
 
         assert_eq!(results, vec!["root_file".to_string()]);
-    }
-
-    #[test]
-    fn find_always_uses_case_sensitive_queries() {
-        let path = PathBuf::from("tests/sample");
-        let mut index = Index::new(path);
-        index.populate(None, true);
-        let term = "Root";
-        let limit = 5;
-
-        // Get a string version of the results (PathBuf doesn't implement the display trait).
-        let results: Vec<String> = index.find(term, limit)
-                                        .iter()
-                                        .map(|r| r.to_string_lossy().into_owned())
-                                        .collect();
-
-        assert!(results.is_empty());
     }
 }
