@@ -1,4 +1,5 @@
 use fragment::matching::AsStr;
+use std::string::ToString;
 use std::path::PathBuf;
 
 /// This Path + String pair exists so that we can build the path's string
@@ -18,16 +19,16 @@ impl AsStr for IndexedPath {
 }
 
 impl IndexedPath {
-    pub fn new(path: &str, case_sensitive: bool) -> IndexedPath {
-        let path_string =
-            if case_sensitive {
-                path.to_string()
-            } else {
-                path.to_lowercase()
-            };
+    pub fn new<T: ToString>(path: T, case_sensitive: bool) -> IndexedPath {
+        let mut path_string = path.to_string();
+        let path = PathBuf::from(&path_string);
+
+        if !case_sensitive {
+            path_string = path_string.to_lowercase();
+        }
 
         IndexedPath{
-            path: PathBuf::from(path),
+            path: path,
             path_string: path_string
         }
     }

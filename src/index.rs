@@ -41,7 +41,7 @@ impl Index {
         for entry in filtered_entries {
             relative_entry_path(entry, prefix_length).map(|entry_path| {
                 self.entries.push(
-                    IndexedPath::new(&entry_path, case_sensitive)
+                    IndexedPath::new(entry_path, case_sensitive)
                 );
             });
         }
