@@ -1,7 +1,7 @@
 [package]
 
 name = "bloodhound"
-version = "0.5.1"
+version = "0.5.2"
 authors = ["Jordan MacDonald <jordan@wastedintelligence.com>"]
 description = "Fuzzy file finder."
 homepage = "https://github.com/jmacdonald/bloodhound"

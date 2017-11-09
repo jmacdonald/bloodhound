@@ -1,3 +1,12 @@
+### 0.5.2
+
+* Updated fragment dependency to v0.3.1
+* Properly handle case insensitive indexing
+    The previous implementation incorrectly modified the path itself when
+    building case insensitive index entries. This implementation limits case
+    sensitivity to a discrete search field, leaving the original file path
+    untouched.
+
 ### 0.5.1
 
 * Updated fragment dependency to v0.3.0.
