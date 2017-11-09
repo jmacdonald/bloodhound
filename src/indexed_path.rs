@@ -19,9 +19,16 @@ impl AsStr for IndexedPath {
 
 impl IndexedPath {
     pub fn new(path: &str, case_sensitive: bool) -> IndexedPath {
+        let path_string =
+            if case_sensitive {
+                path.to_string()
+            } else {
+                path.to_lowercase()
+            };
+
         IndexedPath{
             path: PathBuf::from(path),
-            path_string: path.to_string()
+            path_string: path_string
         }
     }
 }

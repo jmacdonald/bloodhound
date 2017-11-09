@@ -90,7 +90,7 @@ mod tests {
     fn populate_lowercases_entries_when_case_sensitive_is_false() {
         let path = PathBuf::from("tests/sample");
         let mut index = Index::new(path);
-        let expected_entries = vec![IndexedPath::new("directory/capitalized_file", false),
+        let expected_entries = vec![IndexedPath::new("directory/Capitalized_file", false),
                                     IndexedPath::new("directory/nested_file", false),
                                     IndexedPath::new("root_file", false)];
         index.populate(None, false);
