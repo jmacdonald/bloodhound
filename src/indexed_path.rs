@@ -1,6 +1,6 @@
 use fragment::matching::AsStr;
 use std::string::ToString;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 /// This Path + String pair exists so that we can build the path's string
 /// representation once when populating the index, rather than on each search.
@@ -8,8 +8,8 @@ use std::path::PathBuf;
 /// a lowercased search value without modifying the case-sensitive PathBuf.
 #[derive(Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct IndexedPath {
-    pub path: PathBuf,
-    pub path_string: String,
+    path: PathBuf,
+    path_string: String,
 }
 
 impl AsStr for IndexedPath {
@@ -31,6 +31,10 @@ impl IndexedPath {
             path: path,
             path_string: path_string
         }
+    }
+
+    pub fn as_path(&self) -> &Path {
+        self.path.as_path()
     }
 }
 
