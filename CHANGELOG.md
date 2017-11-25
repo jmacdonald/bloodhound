@@ -1,6 +1,11 @@
+### 0.5.3
+
+* Updated index find method to return `Path` references.
+* Made `IndexedPath` type and its fields private.
+
 ### 0.5.2
 
-* Updated fragment dependency to v0.3.1
+* Updated fragment dependency to v0.3.1.
 * Properly handle case insensitive indexing
     The previous implementation incorrectly modified the path itself when
     building case insensitive index entries. This implementation limits case
