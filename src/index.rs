@@ -2,7 +2,7 @@ use fragment::matching;
 use ExclusionPattern;
 use walkdir::{DirEntry, Error, WalkDir};
 use std::path::{Path, PathBuf};
-use IndexedPath;
+use indexed_path::IndexedPath;
 
 pub struct Index {
     path: PathBuf,
