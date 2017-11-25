@@ -1,7 +1,7 @@
 use fragment::matching;
 use ExclusionPattern;
 use walkdir::{DirEntry, Error, WalkDir};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use IndexedPath;
 
 pub struct Index {
@@ -47,10 +47,10 @@ impl Index {
         }
     }
 
-    pub fn find(&self, term: &str, limit: usize) -> Vec<&PathBuf> {
+    pub fn find(&self, term: &str, limit: usize) -> Vec<&Path> {
         matching::find(term, &self.entries, limit)
             .into_iter()
-            .map(|result| &result.path)
+            .map(|result| result.as_path())
             .collect()
     }
 }
@@ -74,7 +74,7 @@ fn relative_entry_path(entry: Result<DirEntry, Error>, prefix_length: usize) -> 
 #[cfg(test)]
 mod tests {
     use super::{Index, IndexedPath, ExclusionPattern};
-    use std::path::PathBuf;
+    use std::path::{Path, PathBuf};
 
     #[test]
     fn populate_respects_exclusions() {
@@ -119,13 +119,8 @@ mod tests {
         index.populate(None, true);
         let term = "root";
         let limit = 5;
+        let results = index.find(term, limit);
 
-        // Get a string version of the results (PathBuf doesn't implement the display trait).
-        let results: Vec<String> = index.find(term, limit)
-                                        .iter()
-                                        .map(|r| r.to_string_lossy().into_owned())
-                                        .collect();
-
-        assert_eq!(results, vec!["root_file".to_string()]);
+        assert_eq!(results, vec![Path::new("root_file")]);
     }
 }
