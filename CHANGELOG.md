@@ -1,3 +1,7 @@
+### 0.5.4
+
+* Added Debug and PartialEq implementations to Index type
+
 ### 0.5.3
 
 * Updated index find method to return `Path` references.
