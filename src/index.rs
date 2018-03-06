@@ -4,6 +4,7 @@ use walkdir::{DirEntry, Error, WalkDir};
 use std::path::{Path, PathBuf};
 use indexed_path::IndexedPath;
 
+#[derive(Debug, PartialEq)]
 pub struct Index {
     path: PathBuf,
     entries: Vec<IndexedPath>,
