@@ -54,6 +54,10 @@ impl Index {
             .map(|result| result.as_path())
             .collect()
     }
+
+    pub fn iter(&self) -> impl Iterator<Item=&Path> {
+        self.entries.iter().map(|e| e.as_path())
+    }
 }
 
 /// Transforms a DirEntry object into an optional relative path string,
