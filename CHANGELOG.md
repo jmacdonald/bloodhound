@@ -1,3 +1,7 @@
+### 0.5.5
+
+* Added iter method to Index type
+
 ### 0.5.4
 
 * Added Debug and PartialEq implementations to Index type
